@@ -1,0 +1,62 @@
+ALTER proc [dbo].[Blog_SelectAll_ByAccountId]
+@PageSize int = 10,
+@PageNum int = 1,
+@AccountId int,
+@isDraft int 
+
+
+as
+
+/*
+	declare @_PageSize int = 10,
+			@_PageNum int = 1,
+			@_AccountId int = 169,
+			@_isDraft int = 1
+			
+		EXECUTE Blog_SelectAll_ByAccountId @_PageSize, @_PageNum, @_AccountId, @_isDraft
+*/
+
+begin 
+with ColTab_Results as /*this method along with option(recompile) allows to use the same page and join new method */
+		(
+	select
+	Id,
+	Title,
+	Image,
+	Body,
+	DateToPublish,
+	IsDraft,
+	IsApproved,
+	BlogCategoryId,
+	CreatedDate,
+	ModifiedDate,
+	ModifiedBy
+
+	from 
+	dbo.Blog
+	
+	where 
+	AccountId = @AccountId and IsDraft = @isDraft
+
+	order by /*Pagination*/
+			CreatedDate
+			offset @PageSize * (@PageNum - 1) rows
+		fetch next @PageSize rows only
+		)
+		Select
+			t.Id,
+			t.Title,
+			t.Image,
+			t.Body,
+			t.DateToPublish,
+			t.IsDraft,
+			t.isApproved,
+			t.BlogCategoryId,
+			t.CreatedDate,
+			t.ModifiedDate,
+			t.ModifiedBy
+		from Blog as t 
+		where exists (select 1 from ColTab_Results where ColTab_Results.Id = t.Id)
+		OPTION (RECOMPILE)/*recompile method to quickly update plan*/
+
+	end
