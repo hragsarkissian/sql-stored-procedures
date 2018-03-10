@@ -1,0 +1,45 @@
+ALTER proc [dbo].[Blog_SelectAllByCategory] 
+@CategoryId int,
+@PageSize int = 10,
+@PageNum int = 1
+
+as
+/*
+		declare
+			@_CategoryId int,
+			@_PageSize int,
+			@_PageNum int
+
+		set @_CategoryId = '4';
+		set @_PageSize = '10';
+		set @_PageNum = '1';
+
+		Execute Blog_SelectAllByCategory @_CategoryId, @_PageSize, @_PageNum
+*/
+begin
+	Select
+		t.Id,
+			t.AccountId,
+			p.FirstName,
+			p.MiddleInitial,
+			p.LastName,
+			t.Title,
+			t.Image,
+			t.Body,
+			t.DateToPublish,
+			t.IsDraft,
+			t.isApproved,
+			t.BlogCategoryId,
+			t.CreatedDate,
+			t.ModifiedDate,
+			t.ModifiedBy
+
+		from
+			Blog as t join person p on t.AccountId=p.AccountId
+		Where
+			BlogCategoryId = @CategoryId
+		order by /*Pagination*/
+			CreatedDate
+			offset @PageSize * (@PageNum - 1) rows
+		fetch next @PageSize rows only
+end
